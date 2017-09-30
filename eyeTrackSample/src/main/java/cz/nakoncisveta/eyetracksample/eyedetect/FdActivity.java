@@ -1,8 +1,12 @@
 package cz.nakoncisveta.eyetracksample.eyedetect;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,9 +41,9 @@ import java.io.InputStream;
 
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
-    private static final String    TAG                 = "OCVSample::Activity";
-    private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
-    public static final int        JAVA_DETECTOR       = 0;
+    private static final String TAG = "OCVSample::Activity";
+    private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    public static final int JAVA_DETECTOR = 0;
     private static final int TM_SQDIFF = 0;
     private static final int TM_SQDIFF_NORMED = 1;
     private static final int TM_CCOEFF = 2;
@@ -57,39 +61,38 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private Mat mZoomWindow;
     private Mat mZoomWindow2;
 
-    private MenuItem               mItemFace50;
-    private MenuItem               mItemFace40;
-    private MenuItem               mItemFace30;
-    private MenuItem               mItemFace20;
-   // private MenuItem               mItemType;
+    private MenuItem mItemFace50;
+    private MenuItem mItemFace40;
+    private MenuItem mItemFace30;
+    private MenuItem mItemFace20;
+    // private MenuItem               mItemType;
 
-    private Mat                    mRgba;
-    private Mat                    mGray;
-    private File                   mCascadeFile;
-    private File                   mCascadeFileEye;
-    private CascadeClassifier      mJavaDetector;
-    private CascadeClassifier      mJavaDetectorEye;
+    private Mat mRgba;
+    private Mat mGray;
+    private File mCascadeFile;
+    private File mCascadeFileEye;
+    private CascadeClassifier mJavaDetector;
+    private CascadeClassifier mJavaDetectorEye;
 
 
-    private int                    mDetectorType       = JAVA_DETECTOR;
-    private String[]               mDetectorName;
+    private int mDetectorType = JAVA_DETECTOR;
+    private String[] mDetectorName;
 
-    private float                  mRelativeFaceSize   = 0.2f;
+    private float mRelativeFaceSize = 0.2f;
     private int mAbsoluteFaceSize = 0;
 
-    private CameraBridgeViewBase   mOpenCvCameraView;
+    private CameraBridgeViewBase mOpenCvCameraView;
     private SeekBar mMethodSeekbar;
     private TextView mValue;
 
     double xCenter = -1;
     double yCenter = -1;
 
-    private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
+                case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
 
 
@@ -144,11 +147,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                     mOpenCvCameraView.enableFpsMeter();
                     mOpenCvCameraView.setCameraIndex(1);
                     mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
+                }
+                break;
+                default: {
                     super.onManagerConnected(status);
-                } break;
+                }
+                break;
             }
         }
     };
@@ -160,7 +164,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
-    /** Called when the activity is first created. */
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
@@ -178,23 +184,20 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mMethodSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar)
-            {
+            public void onStopTrackingTouch(SeekBar seekBar) {
                 // TODO Auto-generated method stub
 
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar)
-            {
+            public void onStartTrackingTouch(SeekBar seekBar) {
                 // TODO Auto-generated method stub
 
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress,
-                                          boolean fromUser)
-            {
+                                          boolean fromUser) {
                 method = progress;
                 switch (method) {
                     case 0:
@@ -223,16 +226,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
             Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
@@ -282,15 +283,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             if (mJavaDetector != null)
                 mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
                         new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
-        }
-        else {
+        } else {
             Log.e(TAG, "Detection method is not selected!");
         }
 
         Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++)
-        {	Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(),
-                FACE_RECT_COLOR, 3);
+        for (int i = 0; i < facesArray.length; i++) {
+            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(),
+                    FACE_RECT_COLOR, 3);
             xCenter = (facesArray[i].x + facesArray[i].width + facesArray[i].x) / 2;
             yCenter = (facesArray[i].y + facesArray[i].y + facesArray[i].height) / 2;
             Point center = new Point(xCenter, yCenter);
@@ -400,7 +400,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         int result_rows = mROI.rows() - mTemplate.rows() + 1;
         // Check for bad template size
         if (mTemplate.cols() == 0 || mTemplate.rows() == 0) {
-            return ;
+            return;
         }
         Mat mResult = new Mat(result_cols, result_rows, CvType.CV_8U);
 
@@ -442,7 +442,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         Imgproc.rectangle(mRgba, matchLoc_tx, matchLoc_ty, new Scalar(255, 255, 0,
                 255));
-        Rect rec = new Rect(matchLoc_tx,matchLoc_ty);
+        Rect rec = new Rect(matchLoc_tx, matchLoc_ty);
 
 
     }
@@ -459,7 +459,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 new Size());
 
         Rect[] eyesArray = eyes.toArray();
-        for (int i = 0; i < eyesArray.length;) {
+        for (int i = 0; i < eyesArray.length; ) {
             Rect e = eyesArray[i];
             e.x = area.x + e.x;
             e.y = area.y + e.y;
@@ -485,8 +485,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         return template;
     }
 
-    public void onRecreateClick(View v)
-    {
+    public void onRecreateClick(View v) {
         learn_frames = 0;
     }
 
